@@ -1,0 +1,112 @@
+name: 🐛 Bug Report
+description: Report a bug or issue with the Cyntek procurement portal
+title: "[BUG]: "
+labels: ["bug", "needs-triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please provide detailed information to help us fix it quickly.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Bug Summary
+      description: Brief description of the bug
+      placeholder: "When I click X, Y happens instead of Z"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Low - Minor inconvenience
+        - Medium - Affects functionality but has workaround
+        - High - Major functionality broken
+        - Critical - System unusable or data loss
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the bug
+      placeholder: |
+        1. Go to...
+        2. Click on...
+        3. Enter...
+        4. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen?
+      placeholder: "The system should..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior  
+      description: What actually happens?
+      placeholder: "Instead, the system..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: user-role
+    attributes:
+      label: User Role
+      description: What role were you using when this occurred?
+      options:
+        - Org Admin
+        - Buyer
+        - Requester  
+        - Cyntek Admin
+        - Not logged in
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      description: Which browser are you using?
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Other
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component Area
+      description: Which part of the application has the bug?
+      options:
+        - Login & Authentication
+        - Parts Catalog & Search
+        - Shopping Cart & Checkout
+        - Purchase Requests
+        - Admin Interface
+        - Analytics & Reports
+        - Email Notifications
+        - Mobile Interface
+        - Other
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Screenshots, error messages, console logs, etc.
+      placeholder: "Any additional information that might help..."
