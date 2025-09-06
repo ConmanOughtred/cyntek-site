@@ -142,21 +142,6 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              🏢 Company Logo
-            </h3>
-            <p className="text-gray-600 mb-4 text-sm">
-              View the official Cyntek Industrial logo and company branding assets.
-            </p>
-            <div className="space-y-2">
-              <Link href="/dashboard/logo" className="block">
-                <Button variant="outline" className="w-full cursor-pointer hover:bg-gray-50">
-                  View Company Logo
-                </Button>
-              </Link>
-            </div>
-          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
