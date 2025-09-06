@@ -52,7 +52,7 @@ export default async function LogoPage() {
           </div>
           
           <Link href="/dashboard">
-            <Button variant="outline" className="cursor-pointer hover:bg-gray-50">
+            <Button className="cursor-pointer bg-green-600 hover:bg-green-700 text-white">
               ← Back to Dashboard
             </Button>
           </Link>
