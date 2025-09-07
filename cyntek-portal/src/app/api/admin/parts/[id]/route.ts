@@ -149,31 +149,25 @@ export async function PUT(
     } = partData
 
     // Validate required fields
-    if (!manufacturer_part_number || !name || !price_type || stock_quantity === undefined) {
+    if (!manufacturer_part_number || !name || !price_type) {
       return NextResponse.json({ 
-        error: 'Missing required fields: manufacturer_part_number, name, price_type, stock_quantity' 
+        error: 'Missing required fields: manufacturer_part_number, name, price_type' 
       }, { status: 400 })
     }
 
-    // Update the part
+    // Update the part (only editable fields)
     const { data: updatedPart, error: partError } = await supabaseService
       .from('parts')
       .update({
         manufacturer_part_number,
-        client_part_number,
         name,
         description,
-        specifications,
-        machine,
-        assembly,
-        manufacturer,
-        part_type,
+        // manufacturer and part_type are read-only in edit mode
         voltage,
         power_rating_hp: power_rating_hp ? parseFloat(power_rating_hp) : null,
         power_rating_kw: power_rating_kw ? parseFloat(power_rating_kw) : null,
         shaft_size,
         gearbox_ratio,
-        stock_quantity: parseInt(stock_quantity),
         estimated_lead_time_days: estimated_lead_time_days ? parseInt(estimated_lead_time_days) : null,
         price_type,
         unit_price: unit_price ? parseFloat(unit_price) : null,
@@ -208,12 +202,21 @@ export async function PUT(
         const detailsRecords = organization_access.map((access: any) => ({
           part_id: partId,
           organization_id: access.organization_id,
-          organization_item_number: access.organization_item_number || null,
-          estimated_lead_time_days: access.estimated_lead_time_days || null,
-          price_type: access.price_type || 'non_fixed',
-          unit_price: access.unit_price ? parseFloat(access.unit_price) : null,
-          is_repairable: access.is_repairable || false,
-          repair_price: access.repair_price ? parseFloat(access.repair_price) : null
+          estimated_lead_time_days: access.use_default_pricing ? 
+            (estimated_lead_time_days ? parseInt(estimated_lead_time_days) : null) : 
+            (access.custom_lead_time ? parseInt(access.custom_lead_time) : null),
+          price_type: access.use_default_pricing ? 
+            price_type : 
+            (access.custom_price_type || 'non_fixed'),
+          unit_price: access.use_default_pricing ? 
+            (unit_price ? parseFloat(unit_price) : null) : 
+            (access.custom_price ? parseFloat(access.custom_price) : null),
+          is_repairable: access.use_default_pricing ? 
+            Boolean(is_repairable) : 
+            Boolean(access.custom_is_repairable),
+          repair_price: access.use_default_pricing ? 
+            (repair_price ? parseFloat(repair_price) : null) : 
+            (access.custom_repair_price ? parseFloat(access.custom_repair_price) : null)
         }))
 
         const { error: detailsError } = await supabaseService
@@ -227,16 +230,14 @@ export async function PUT(
 
         // Create application assignments if provided
         for (const access of organization_access) {
-          if (access.applications && access.applications.length > 0) {
-            const appRecords = access.applications.map((appId: string) => ({
-              part_id: partId,
-              application_id: appId,
-              organization_id: access.organization_id
-            }))
-
+          if (access.application_id && access.application_id !== '__none__') {
             const { error: appError } = await supabaseService
               .from('part_applications')
-              .insert(appRecords)
+              .insert({
+                part_id: partId,
+                application_id: access.application_id,
+                organization_id: access.organization_id
+              })
 
             if (appError) {
               console.error('Application assignment update error:', appError)

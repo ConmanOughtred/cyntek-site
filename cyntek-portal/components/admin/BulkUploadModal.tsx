@@ -72,6 +72,28 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUploadModalP
     }
   }
 
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const droppedFile = e.dataTransfer.files?.[0]
+    if (droppedFile) {
+      if (droppedFile.type !== 'text/csv' && !droppedFile.name.endsWith('.csv')) {
+        setError('Please select a CSV file')
+        return
+      }
+      setFile(droppedFile)
+      setError(null)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+  }
+
+  const handleFileButtonClick = () => {
+    const fileInput = document.getElementById('csv-upload') as HTMLInputElement
+    fileInput?.click()
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!file) {
@@ -124,9 +146,9 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUploadModalP
   }
 
   const downloadTemplate = () => {
-    const csvContent = `manufacturer_part_number,manufacturer,client_part_number,name,description,machine,assembly,part_type,voltage,shaft_size,gearbox_ratio,power_rating_hp,power_rating_kw,estimated_lead_time_days,price_type,unit_price,repair_price,is_repairable
-MPN001,Acme Corp,,Sample Gearbox,High-performance industrial gearbox,Machine A,Assembly 1,Gearbox,480V,25mm,10:1,5,3.7,30,fixed,99.99,,false
-MPN002,Beta Industries,CLIENT123,Motor Drive Unit,Variable speed motor drive,Machine B,Assembly 2,Motor,240V,30mm,20:1,10,7.5,45,non_fixed,,,true`
+    const csvContent = `manufacturer_part_number,manufacturer,client_part_number,name,description,part_type,voltage,shaft_size,gearbox_ratio,power_rating_hp,power_rating_kw,estimated_lead_time_days,price_type,unit_price,repair_price,is_repairable
+MPN001,Acme Corp,,Sample Gearbox,High-performance industrial gearbox,Gearbox,480V,25mm,10:1,5,3.7,30,fixed,99.99,149.99,false
+MPN002,Beta Industries,CLIENT123,Motor Drive Unit,Variable speed motor drive,Motor,240V,30mm,20:1,10,7.5,45,non_fixed,,89.99,true`
     
     const blob = new Blob([csvContent], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
@@ -181,10 +203,17 @@ MPN002,Beta Industries,CLIENT123,Motor Drive Unit,Variable speed motor drive,Mac
 
           {/* Organization Selection */}
           <div className="space-y-4">
+            {/* Explanatory text for bulk upload */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-black text-sm">
+              <p>
+                To upload parts in bulk to the Parts Database you must select a Target Organization. To add parts to another organization, you must edit the part from the Parts Database. Pricing & Delivery information included in the CSV upload will be set as the default. To add a part to additional applications, navigate to the part details page.
+              </p>
+            </div>
+            
             <div>
               <label className="block text-sm font-medium mb-2">Target Organization *</label>
               <Select value={selectedOrganization} onValueChange={setSelectedOrganization}>
-                <SelectTrigger>
+                <SelectTrigger className="cursor-pointer hover:bg-gray-50">
                   <SelectValue placeholder="Select organization" />
                 </SelectTrigger>
                 <SelectContent>
@@ -202,7 +231,7 @@ MPN002,Beta Industries,CLIENT123,Motor Drive Unit,Variable speed motor drive,Mac
               <div>
                 <label className="block text-sm font-medium mb-2">Target Application (Optional)</label>
                 <Select value={selectedProject} onValueChange={setSelectedProject}>
-                  <SelectTrigger>
+                  <SelectTrigger className="cursor-pointer hover:bg-gray-50">
                     <SelectValue placeholder="Select application (optional)" />
                   </SelectTrigger>
                   <SelectContent>
@@ -221,7 +250,12 @@ MPN002,Beta Industries,CLIENT123,Motor Drive Unit,Variable speed motor drive,Mac
           {/* File Upload */}
           <div>
             <label className="block text-sm font-medium mb-2">CSV File *</label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <div 
+              className="border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors rounded-lg p-6 text-center cursor-pointer"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onClick={handleFileButtonClick}
+            >
               <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
               {file ? (
                 <div>
@@ -229,7 +263,13 @@ MPN002,Beta Industries,CLIENT123,Motor Drive Unit,Variable speed motor drive,Mac
                   <p className="text-sm text-gray-500">{(file.size / 1024).toFixed(1)} KB</p>
                 </div>
               ) : (
-                <p className="text-gray-600 mb-2">Select CSV file to upload</p>
+                <div>
+                  <p className="text-gray-600 mb-2">Click to select or drag & drop CSV file</p>
+                  <Button variant="outline" size="sm" className="cursor-pointer hover:bg-gray-50">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Select CSV File
+                  </Button>
+                </div>
               )}
               <input
                 type="file"
@@ -239,12 +279,6 @@ MPN002,Beta Industries,CLIENT123,Motor Drive Unit,Variable speed motor drive,Mac
                 id="csv-upload"
                 disabled={loading}
               />
-              <label htmlFor="csv-upload" className="cursor-pointer">
-                <Button variant="outline" size="sm">
-                  <Upload className="h-4 w-4 mr-2" />
-                  {file ? 'Change File' : 'Select CSV File'}
-                </Button>
-              </label>
             </div>
           </div>
 
@@ -263,8 +297,6 @@ MPN002,Beta Industries,CLIENT123,Motor Drive Unit,Variable speed motor drive,Mac
               <ul className="space-y-1 text-gray-600">
                 <li>• client_part_number</li>
                 <li>• description</li>
-                <li>• machine</li>
-                <li>• assembly</li>
                 <li>• part_type</li>
                 <li>• voltage</li>
                 <li>• shaft_size</li>
@@ -279,20 +311,20 @@ MPN002,Beta Industries,CLIENT123,Motor Drive Unit,Variable speed motor drive,Mac
             </div>
           </div>
 
-          <Button type="button" variant="outline" className="w-full" onClick={downloadTemplate}>
+          <Button type="button" variant="outline" className="w-full cursor-pointer hover:bg-gray-50" onClick={downloadTemplate}>
             <Download className="h-4 w-4 mr-2" />
             Download CSV Template
           </Button>
         </form>
 
         <div className="flex justify-end gap-4 p-6 border-t">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} className="cursor-pointer hover:bg-gray-50">
             Close
           </Button>
           <Button 
             onClick={handleSubmit} 
             disabled={!file || !selectedOrganization || loading}
-            className={loading ? 'opacity-50' : ''}
+            className={`cursor-pointer ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}`}
           >
             {loading ? (
               <>Processing...</>

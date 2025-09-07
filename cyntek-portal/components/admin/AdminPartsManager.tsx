@@ -69,6 +69,8 @@ export function AdminPartsManager() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
   const [selectedPart, setSelectedPart] = useState<Part | null>(null)
+  const [manufacturers, setManufacturers] = useState<string[]>([])
+  const [organizations, setOrganizations] = useState<Array<{id: string; name: string}>>([])
 
   const loadParts = async (filters?: {
     search?: string
@@ -142,7 +144,26 @@ export function AdminPartsManager() {
 
   useEffect(() => {
     loadParts()
+    loadOrganizations()
   }, [])
+  
+  // Extract unique manufacturers from parts data
+  useEffect(() => {
+    const uniqueManufacturers = [...new Set(parts.map(part => part.manufacturer).filter(Boolean))]
+    setManufacturers(uniqueManufacturers.sort())
+  }, [parts])
+  
+  const loadOrganizations = async () => {
+    try {
+      const response = await fetch('/api/admin/organizations')
+      if (response.ok) {
+        const data = await response.json()
+        setOrganizations(data.organizations || [])
+      }
+    } catch (err) {
+      console.error('Failed to load organizations:', err)
+    }
+  }
 
   // Live search effect
   useEffect(() => {
@@ -268,9 +289,11 @@ export function AdminPartsManager() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">All Clients</SelectItem>
-                {/* Will be populated with actual organizations */}
-                <SelectItem value="org1">Sample Client 1</SelectItem>
-                <SelectItem value="org2">Sample Client 2</SelectItem>
+                {organizations.map((org) => (
+                  <SelectItem key={org.id} value={org.id}>
+                    {org.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             
@@ -291,7 +314,11 @@ export function AdminPartsManager() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">All Manufacturers</SelectItem>
-                {/* Will be populated with actual manufacturers */}
+                {manufacturers.map((manufacturer) => (
+                  <SelectItem key={manufacturer} value={manufacturer}>
+                    {manufacturer}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -370,19 +397,10 @@ export function AdminPartsManager() {
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h3 className="font-semibold text-gray-900 text-lg">{part.name}</h3>
-                        <div className="text-sm text-gray-600 space-y-1 mt-1">
-                          <p><span className="font-medium">MPN:</span> {part.manufacturer_part_number}</p>
+                        <h3 className="font-semibold text-gray-900 text-lg mb-2">{part.name}</h3>
+                        <div className="text-sm text-gray-600 space-y-1">
                           <p><span className="font-medium">Manufacturer:</span> {part.manufacturer}</p>
-                          {part.part_type && (
-                            <p><span className="font-medium">Type:</span> {part.part_type}</p>
-                          )}
-                          {part.voltage && (
-                            <p><span className="font-medium">Voltage:</span> {part.voltage}</p>
-                          )}
-                          {(part.power_rating_hp || part.power_rating_kw) && (
-                            <p><span className="font-medium">Power:</span> {part.power_rating_hp ? `${part.power_rating_hp} HP` : ''}{part.power_rating_hp && part.power_rating_kw ? ' / ' : ''}{part.power_rating_kw ? `${part.power_rating_kw} kW` : ''}</p>
-                          )}
+                          <p><span className="font-medium">MPN:</span> {part.manufacturer_part_number}</p>
                           {part.description && (
                             <p><span className="font-medium">Description:</span> {part.description}</p>
                           )}
